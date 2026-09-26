@@ -75,3 +75,11 @@ export const supplierAPI = {
 export const analyticsAPI = {
     getAnalytics: () => apiRequest('/analytics')
 };
+
+export const forecastAPI = {
+    getHealth: () => apiRequest('/forecast/health'),
+    getProductForecast: (productId, days = 14) => apiRequest(`/forecast/product/${productId}?days=${days}`),
+    syncAllForecasts: (days = 14) => apiRequest('/forecast/sync', { method: 'POST', body: JSON.stringify({ days }) }),
+    getStoredForecasts: (productId = null) => apiRequest(`/forecast/stored${productId ? `/${productId}` : ''}`)
+};
+

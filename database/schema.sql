@@ -120,3 +120,22 @@ CREATE INDEX idx_products_stock ON products(stock_quantity);
 CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_logs_product ON inventory_logs(product_id);
+
+-- 9. AI Predictive Demand Forecast Table
+CREATE TABLE IF NOT EXISTS demand_forecast (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    forecast_date DATE NOT NULL,
+    predicted_quantity INT NOT NULL DEFAULT 0,
+    confidence_score DECIMAL(5,2) DEFAULT 85.00,
+    horizon_days INT NOT NULL DEFAULT 30,
+    model_version VARCHAR(50) NOT NULL DEFAULT 'v1.0.0',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_product_forecast_date (product_id, forecast_date),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_forecast_product ON demand_forecast(product_id);
+CREATE INDEX idx_forecast_date ON demand_forecast(forecast_date);
+

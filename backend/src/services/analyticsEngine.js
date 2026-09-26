@@ -210,23 +210,79 @@ const getInventoryAnalytics = async () => {
         categoryDistribution[cat] = (categoryDistribution[cat] || 0) + p.stock_quantity;
     });
 
-    // 8. 7-Day Forward Demand Trend for Top 5 Velocity Products
+    // 8. Fetch AI Demand Predictions from MySQL demand_forecast table if available
+    let aiForecastMap = {};
+    let uniqueForecastDates = [];
+    try {
+        const [forecastRows] = await db.query(`
+            SELECT product_id, DATE_FORMAT(forecast_date, '%Y-%m-%d') as forecast_date, 
+                   predicted_quantity, confidence_score, model_version
+            FROM demand_forecast
+            WHERE forecast_date >= CURDATE()
+            ORDER BY product_id ASC, forecast_date ASC
+        `);
+        forecastRows.forEach(row => {
+            if (!aiForecastMap[row.product_id]) {
+                aiForecastMap[row.product_id] = [];
+            }
+            aiForecastMap[row.product_id].push(row);
+            if (!uniqueForecastDates.includes(row.forecast_date)) {
+                uniqueForecastDates.push(row.forecast_date);
+            }
+        });
+    } catch (e) {
+        // Silently continue if table is querying on fallback
+    }
+
+    // Attach AI predictions to each analyzed product
+    analyzedProducts.forEach(p => {
+        const aiItems = aiForecastMap[p.id] || [];
+        p.aiPredictions = aiItems;
+        if (aiItems.length > 0) {
+            const next7DaysAi = aiItems.slice(0, 7);
+            const totalAi7Days = next7DaysAi.reduce((sum, r) => sum + Number(r.predicted_quantity), 0);
+            p.aiForecast7Days = totalAi7Days;
+            p.aiConfidence = aiItems[0]?.confidence_score || 85.0;
+            p.aiModelVersion = aiItems[0]?.model_version || 'v1.0.0';
+        } else {
+            p.aiForecast7Days = p.forecast7Days;
+            p.aiConfidence = null;
+            p.aiModelVersion = null;
+        }
+    });
+
+    // 9. 7-Day Forward Demand Trend for Top 5 Products using AI Model Predictions
     const topMoving = [...analyzedProducts].sort((a, b) => b.avgDailyDemand - a.avgDailyDemand).slice(0, 5);
+    const forecastDaysLabels = uniqueForecastDates.length >= 7 
+        ? uniqueForecastDates.slice(0, 7)
+        : ['Day +1', 'Day +2', 'Day +3', 'Day +4', 'Day +5', 'Day +6', 'Day +7'];
+
     const forwardForecastSeries = {
-        days: ['Day +1', 'Day +2', 'Day +3', 'Day +4', 'Day +5', 'Day +6', 'Day +7'],
-        products: topMoving.map(p => ({
-            name: p.name,
-            sku: p.sku,
-            data: [
-                Math.round(p.avgDailyDemand * 1.0),
-                Math.round(p.avgDailyDemand * 1.05),
-                Math.round(p.avgDailyDemand * 1.02),
-                Math.round(p.avgDailyDemand * 1.1),
-                Math.round(p.avgDailyDemand * 1.15),
-                Math.round(p.avgDailyDemand * 1.2),
-                Math.round(p.avgDailyDemand * 1.18)
-            ]
-        }))
+        days: forecastDaysLabels,
+        isAiModelDriven: Object.keys(aiForecastMap).length > 0,
+        products: topMoving.map(p => {
+            const aiItems = aiForecastMap[p.id] || [];
+            let seriesData = [];
+            if (aiItems.length >= 7) {
+                seriesData = aiItems.slice(0, 7).map(item => Number(item.predicted_quantity));
+            } else {
+                seriesData = [
+                    Math.round(p.avgDailyDemand * 1.0),
+                    Math.round(p.avgDailyDemand * 1.05),
+                    Math.round(p.avgDailyDemand * 1.02),
+                    Math.round(p.avgDailyDemand * 1.1),
+                    Math.round(p.avgDailyDemand * 1.15),
+                    Math.round(p.avgDailyDemand * 1.2),
+                    Math.round(p.avgDailyDemand * 1.18)
+                ];
+            }
+            return {
+                id: p.id,
+                name: p.name,
+                sku: p.sku,
+                data: seriesData
+            };
+        })
     };
 
     return {

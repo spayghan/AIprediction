@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
 
 const { initDB, getDbType } = require('./src/config/db');
@@ -9,6 +11,7 @@ const orderRoutes = require('./src/routes/orderRoutes');
 const inventoryRoutes = require('./src/routes/inventoryRoutes');
 const supplierRoutes = require('./src/routes/supplierRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
+const forecastRoutes = require('./src/routes/forecastRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,6 +53,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/forecast', forecastRoutes);
 
 // Fallback 404 handler
 app.use((req, res) => {
