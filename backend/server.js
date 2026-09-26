@@ -22,17 +22,27 @@ app.use(cors({
 app.use(express.json());
 
 // API Health Check & Database Diagnostic Endpoint
+// app.get('/api/health', (req, res) => {
+//     res.json({
+//         status: 'online',
+//         system: 'E-Commerce Inventory & Order Management System',
+//         corporateDomain: 'E-Commerce',
+//         aiDsIntegration: 'Inventory Analytics (Forecasting, ROP, Stockout Risk, ABC Pareto)',
+//         databaseEngine: getDbType() === 'mysql' ? 'MySQL 8.0 (Active & Connected)' : 'Embedded Relational Database (Fallback Mode)',
+//         timestamp: new Date().toISOString()
+//     });
+// });
+// Database Diagnostic & Live Health Endpoint
 app.get('/api/health', (req, res) => {
+    const isMySQL = getDbType() === 'mysql';
     res.json({
         status: 'online',
-        system: 'E-Commerce Inventory & Order Management System',
-        corporateDomain: 'E-Commerce',
-        aiDsIntegration: 'Inventory Analytics (Forecasting, ROP, Stockout Risk, ABC Pareto)',
-        databaseEngine: getDbType() === 'mysql' ? 'MySQL 8.0 (Active & Connected)' : 'Embedded Relational Database (Fallback Mode)',
+        databaseEngine: isMySQL ? 'MySQL 8.0 (Workbench Synced)' : 'SQLite3 (Fallback)',
+        isMySQL,
+        databaseName: process.env.DB_NAME || 'inventory_ecommerce_db',
         timestamp: new Date().toISOString()
     });
 });
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);

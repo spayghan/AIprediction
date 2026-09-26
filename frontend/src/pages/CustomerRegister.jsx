@@ -21,7 +21,8 @@ export const CustomerRegister = ({ setView }) => {
 
         try {
             await register(formData);
-            setView('shop');
+            // Redirect directly to the Customer Orders portal
+            setView('customer-orders');
         } catch (err) {
             setError(err.message || 'Registration failed');
         } finally {
@@ -34,12 +35,13 @@ export const CustomerRegister = ({ setView }) => {
             <div className="max-w-md w-full">
                 <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-100 p-8 sm:p-10">
                     
+                    {/* Header */}
                     <div className="text-center mb-6">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mb-3 border border-indigo-100">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 mb-3 border border-teal-100">
                             <User className="w-6 h-6" />
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Create Customer Account</h2>
-                        <p className="text-xs text-slate-500 mt-1">Join NexStore to buy products with live inventory tracking</p>
+                        <p className="text-xs text-slate-500 mt-1">Join InventoryHub to buy products with live inventory tracking</p>
                     </div>
 
                     {error && (
@@ -61,7 +63,7 @@ export const CustomerRegister = ({ setView }) => {
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="Jane Doe"
-                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white"
                                 />
                             </div>
                         </div>
@@ -78,7 +80,7 @@ export const CustomerRegister = ({ setView }) => {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     placeholder="jane@example.com"
-                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white"
                                 />
                             </div>
                         </div>
@@ -95,7 +97,7 @@ export const CustomerRegister = ({ setView }) => {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     placeholder="Minimum 6 characters"
-                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white"
                                 />
                             </div>
                         </div>
@@ -111,7 +113,7 @@ export const CustomerRegister = ({ setView }) => {
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     placeholder="+1-555-0123"
-                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white"
                                 />
                             </div>
                         </div>
@@ -127,7 +129,7 @@ export const CustomerRegister = ({ setView }) => {
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                     placeholder="123 Market St, City, State, ZIP"
-                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white"
                                 />
                             </div>
                         </div>
@@ -135,7 +137,7 @@ export const CustomerRegister = ({ setView }) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-4 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 transition-all disabled:opacity-50"
+                            className="w-full mt-4 py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-teal-100 transition-all disabled:opacity-50"
                         >
                             {loading ? 'Registering...' : 'Complete Registration'}
                             <ArrowRight className="w-4 h-4" />
@@ -147,7 +149,7 @@ export const CustomerRegister = ({ setView }) => {
                             Already registered?{' '}
                             <button
                                 onClick={() => setView('customer-login')}
-                                className="font-bold text-indigo-600 hover:underline"
+                                className="font-bold text-teal-700 hover:underline"
                             >
                                 Sign in here
                             </button>

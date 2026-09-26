@@ -4,7 +4,8 @@ import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 
-// Customer Pages
+// Pages
+import { LandingPage } from './pages/LandingPage';
 import { Shop } from './pages/Shop';
 import { Cart } from './pages/Cart';
 import { Checkout } from './pages/Checkout';
@@ -22,7 +23,8 @@ import { AdminSuppliers } from './pages/AdminSuppliers';
 
 const MainLayout = () => {
     const { user, isAdmin, isAuthenticated } = useAuth();
-    const [currentView, setView] = useState('shop');
+    // Default starting view is 'landing' (Image 1)
+    const [currentView, setView] = useState('landing');
 
     const renderCurrentView = () => {
         // Protected Admin routes check
@@ -37,7 +39,11 @@ const MainLayout = () => {
         }
 
         switch (currentView) {
-            // Customer Views
+            // First Page: Landing
+            case 'landing':
+                return <LandingPage setView={setView} />;
+
+            // Customer Storefront: Shop (Image 2)
             case 'shop':
                 return <Shop setView={setView} />;
             case 'cart':
@@ -66,12 +72,12 @@ const MainLayout = () => {
                 return <AdminSuppliers setView={setView} />;
 
             default:
-                return <Shop setView={setView} />;
+                return <LandingPage setView={setView} />;
         }
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white">
+        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
             <Navbar currentView={currentView} setView={setView} />
             <main className="flex-1">
                 {renderCurrentView()}
