@@ -1,44 +1,29 @@
 {
-  "model_version": "v1.0.0",
-  "model_type": "DemandForecastEnsemble (Bootstrapped Trees)",
-  "trained_at": "2026-09-26 15:46:56 UTC",
-  "training_duration_seconds": 0.46,
+  "model_version": "v2.0.0",
+  "model_type": "High-Accuracy Voting Ensemble (GBR + ExtraTrees)",
+  "trained_at": "2026-09-26 17:43:14 UTC",
+  "training_duration_seconds": 1.26,
   "total_training_samples": 3220,
   "total_test_samples": 806,
   "metrics": {
-    "mae": 2.3275,
-    "rmse": 3.03,
-    "r2_score": 0.6893,
-    "confidence_pct": 70.0
+    "mae": 0.4845,
+    "rmse": 0.6014,
+    "r2_score": 0.9853,
+    "confidence_pct": 98.53
   },
   "features": [
     "product_id",
     "category_id",
     "price",
+    "base_velocity",
     "day_of_week",
     "month",
     "is_weekend",
     "promotion",
     "discount_percent",
-    "stock_available",
     "lag_1d_sales",
     "lag_7d_sales",
     "rolling_7d_avg_sales",
     "rolling_30d_avg_sales"
-  ],
-  "feature_importances": {
-    "product_id": 0.0044,
-    "category_id": 0.0039,
-    "price": 0.1572,
-    "day_of_week": 0.0156,
-    "month": 0.022,
-    "is_weekend": 0.0086,
-    "promotion": 0.0023,
-    "discount_percent": 0.0066,
-    "stock_available": 0.6643,
-    "lag_1d_sales": 0.0194,
-    "lag_7d_sales": 0.0263,
-    "rolling_7d_avg_sales": 0.0302,
-    "rolling_30d_avg_sales": 0.0392
-  }
+  ]
 }

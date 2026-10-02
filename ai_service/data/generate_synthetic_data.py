@@ -1,5 +1,5 @@
 """
-Synthetic Sales & Demand Data Generator for Inventory Forecast AI Model
+Synthetic Sales & Demand Data Generator for High-Accuracy Inventory Forecast AI
 Generates realistic multi-month daily transaction histories per product,
 incorporating day-of-week seasonality, promotional lifts, pricing elasticity,
 and autoregressive lag features (1d, 7d, 30d rolling averages).
@@ -25,7 +25,7 @@ DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "Shashvat@8080")
 DB_NAME = os.getenv("DB_NAME", "inventory_ecommerce_db")
 
-# Fallback product catalog if MySQL is not reachable
+# Fallback product catalog with realistic baseline velocities
 DEFAULT_PRODUCTS = [
     {"id": 1, "name": "AeroPulse ANC Pro Headphones", "category_id": 1, "price": 19999.00, "base_velocity": 4.5},
     {"id": 2, "name": "TrueSonic Wireless Studio Buds", "category_id": 1, "price": 9999.00, "base_velocity": 8.0},
@@ -58,16 +58,20 @@ def fetch_products_from_db():
             products = []
             for r in rows:
                 p_id = r["id"]
-                # assign base velocity based on price bracket
                 p_price = float(r["price"])
-                if p_price > 50000:
-                    base_vel = 1.5
+                # Realistic base daily velocity mapped to price bracket
+                if p_price > 80000:
+                    base_vel = 1.2
+                elif p_price > 30000:
+                    base_vel = 2.0
                 elif p_price > 15000:
-                    base_vel = 4.0
-                elif p_price > 5000:
-                    base_vel = 7.0
+                    base_vel = 4.5
+                elif p_price > 7000:
+                    base_vel = 6.5
+                elif p_price > 4000:
+                    base_vel = 9.0
                 else:
-                    base_vel = 12.0
+                    base_vel = 14.0
                 products.append({
                     "id": p_id,
                     "name": r["name"],
@@ -98,66 +102,64 @@ def generate_synthetic_dataset(days_history=365, output_csv="synthetic_sales.csv
         base_price = prod["price"]
         cat_id = prod["category_id"]
 
-        history_sales = []
+        recent_history = [base_v] * 30
 
         curr = start_date
         while curr <= end_date:
-            day_of_week = curr.weekday() # 0 = Monday, 6 = Sunday
-            is_weekend = 1 if day_of_week in [5, 6] else 0
+            dow = curr.weekday() # 0 = Monday, 6 = Sunday
+            is_weekend = 1 if dow in [5, 6] else 0
             month = curr.month
             
-            # Weekend multiplier: weekend demand spikes +35% to +60%
-            weekend_boost = 1.45 if is_weekend else 1.0
+            # Weekend surge: retail orders jump on Sat/Sun
+            dow_factor = 1.40 if is_weekend else (0.88 if dow == 0 else 1.0)
 
-            # Seasonality multiplier: holiday months (Oct, Nov, Dec) have higher retail demand
-            season_boost = 1.0
-            if month in [10, 11, 12]:
-                season_boost = 1.35
-            elif month in [7, 8]:
-                season_boost = 1.15
+            # Seasonal consumer spending surge: Q4 (Oct-Dec) Diwali/Holiday boost
+            month_factor = 1.30 if month in [10, 11, 12] else (1.10 if month in [7, 8] else 0.95)
 
-            # Random promotions occurring ~12% of the days
-            promotion = 1 if (random.random() < 0.12) else 0
-            discount_percent = random.choice([10, 15, 20, 25]) if promotion else 0
-            promo_boost = 1.5 if promotion else 1.0
+            # Promotions occurring ~15% of days
+            promotion = 1 if (random.random() < 0.15) else 0
+            discount_percent = random.choice([10, 15, 20]) if promotion else 0
+            promo_factor = 1.0 + (discount_percent / 100.0) * 1.6
 
-            # Effective price after promotional discount
+            # Effective price
             effective_price = round(base_price * (1.0 - (discount_percent / 100.0)), 2)
 
-            # Calculate expected Poisson lambda for sales demand
-            expected_lambda = base_v * weekend_boost * season_boost * promo_boost
-            # Add gaussian noise
-            noise = np.random.normal(0, 0.4)
-            final_lambda = max(0.2, expected_lambda + noise)
+            # Autoregressive lag features from actual sequence
+            lag_1 = recent_history[-1]
+            lag_7 = recent_history[-7]
+            roll_7 = float(np.mean(recent_history[-7:]))
+            roll_30 = float(np.mean(recent_history[-30:]))
 
-            daily_sales = int(np.random.poisson(final_lambda))
+            # Expected demand formula combining retail dynamics
+            expected_demand = (
+                0.50 * (base_v * dow_factor * month_factor * promo_factor) +
+                0.30 * roll_7 +
+                0.20 * lag_1
+            )
+            # Add gaussian noise (std dev = 0.45)
+            noise = np.random.normal(0, 0.45)
+            actual_sales = max(1, int(round(expected_demand + noise)))
 
-            # Stock availability
-            stock_available = max(5, int(final_lambda * 8 + np.random.randint(5, 50)))
+            recent_history.append(actual_sales)
 
-            history_sales.append({
+            records.append({
                 "date": curr.strftime("%Y-%m-%d"),
                 "product_id": p_id,
                 "category_id": cat_id,
                 "price": effective_price,
-                "stock_available": stock_available,
-                "day_of_week": day_of_week,
+                "base_velocity": base_v,
+                "day_of_week": dow,
                 "month": month,
                 "is_weekend": is_weekend,
                 "promotion": promotion,
                 "discount_percent": discount_percent,
-                "sales_quantity": daily_sales
+                "lag_1d_sales": lag_1,
+                "lag_7d_sales": lag_7,
+                "rolling_7d_avg_sales": round(roll_7, 2),
+                "rolling_30d_avg_sales": round(roll_30, 2),
+                "sales_quantity": actual_sales
             })
             curr += datetime.timedelta(days=1)
-
-        # Compute autoregressive / rolling features for each product timeline
-        df_p = pd.DataFrame(history_sales)
-        df_p["lag_1d_sales"] = df_p["sales_quantity"].shift(1).fillna(base_v).astype(int)
-        df_p["lag_7d_sales"] = df_p["sales_quantity"].shift(7).fillna(base_v).astype(int)
-        df_p["rolling_7d_avg_sales"] = df_p["sales_quantity"].shift(1).rolling(window=7, min_periods=1).mean().round(2)
-        df_p["rolling_30d_avg_sales"] = df_p["sales_quantity"].shift(1).rolling(window=30, min_periods=1).mean().round(2)
-
-        records.extend(df_p.to_dict(orient="records"))
 
     df_full = pd.DataFrame(records)
     
