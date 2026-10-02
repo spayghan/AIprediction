@@ -52,6 +52,9 @@ The project is structured into three clean, separate folders as requested:
 
 ---
 
+## ER Diagram
+<img src="ER_diagram.png" alt="A descriptive title of your image" width="1100" height="600">
+
 ## 🔑 Login Credentials
 
 The system provides **two distinct login portals**:
